@@ -965,14 +965,14 @@ const MATERIA_COLORS = [
 // ─────────────────────────────────────────────
 async function saveToStorage(key, value) {
   try {
-    await window.storage.set(key, JSON.stringify(value));
+    localStorage.setItem(key, JSON.stringify(value));
   } catch(e) { console.log('Storage save error:', e); }
 }
 
 async function loadFromStorage(key) {
   try {
-    const result = await window.storage.get(key);
-    return result ? JSON.parse(result.value) : null;
+    const result = localStorage.getItem(key);
+    return result ? JSON.parse(result) : null;
   } catch(e) { return null; }
 }
 
@@ -983,6 +983,23 @@ async function initStorage() {
     if (savedSettings.model) state.model = savedSettings.model;
     if (savedSettings.monthlyLimit) state.monthlyLimit = savedSettings.monthlyLimit;
     if (savedSettings.dailyCost) state.dailyCost = savedSettings.dailyCost;
+  }
+
+  // Auto-restore Drive token (valid for 1 hour)
+  const savedToken = localStorage.getItem('odontoia-drive-token');
+  const savedTokenTime = localStorage.getItem('odontoia-drive-token-time');
+  if (savedToken && savedTokenTime) {
+    const elapsed = Date.now() - parseInt(savedTokenTime);
+    if (elapsed < 3600000) {
+      state.driveToken = savedToken;
+      state.driveConnected = true;
+      document.getElementById('drive-dot').className = 'drive-dot connected';
+      document.getElementById('drive-label').textContent = 'Drive conectado';
+      setTimeout(() => loadDriveFolders(), 500);
+    } else {
+      localStorage.removeItem('odontoia-drive-token');
+      localStorage.removeItem('odontoia-drive-token-time');
+    }
   }
 
   const savedSessions = await loadFromStorage('odontoia-sessions');
@@ -1094,6 +1111,8 @@ function connectDrive() {
 async function onDriveConnected(token) {
   state.driveToken = token;
   state.driveConnected = true;
+  localStorage.setItem('odontoia-drive-token', token);
+  localStorage.setItem('odontoia-drive-token-time', Date.now().toString());
 
   // Get user info
   try {

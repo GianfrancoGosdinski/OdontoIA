@@ -1,0 +1,1750 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OdontoIA</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --verde: #085041;
+    --verde-light: #0a6652;
+    --verde-dark: #053530;
+    --verde-pale: #e8f5f0;
+    --verde-mid: #1a7a62;
+    --blanco: #ffffff;
+    --gris-fondo: #f5f7f6;
+    --gris-borde: #e0e8e5;
+    --gris-texto: #4a5a55;
+    --gris-muted: #8a9e98;
+    --negro: #0d1a16;
+
+    --endodoncia: #085041;
+    --periodoncia: #2563a8;
+    --cirugia: #7c3aed;
+    --ortodoncia: #b45309;
+    --radiologia: #0e7490;
+    --prostodoncia: #be185d;
+    --operatoria: #065f46;
+    --otras: #374151;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--gris-fondo);
+    color: var(--negro);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--verde);
+    color: white;
+    padding: 0 20px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(8,80,65,0.3);
+    z-index: 100;
+  }
+  .header-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    letter-spacing: -0.3px;
+    color: white;
+  }
+  .header-logo span { color: #7eecc8; }
+  .header-right { display: flex; align-items: center; gap: 12px; }
+  .cost-badge {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #b8f0de;
+    cursor: pointer;
+  }
+  .cost-badge span { color: white; font-weight: 600; }
+  .header-model {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    background: rgba(0,0,0,0.15);
+    padding: 3px 8px;
+    border-radius: 10px;
+  }
+
+  /* LAYOUT */
+  .app-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px;
+    background: var(--verde-dark);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow: hidden;
+    transition: width 0.3s ease;
+  }
+  .sidebar.collapsed { width: 0; }
+
+  .sidebar-header {
+    padding: 16px 16px 8px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .materias-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 8px 16px;
+  }
+  .materias-list::-webkit-scrollbar { width: 4px; }
+  .materias-list::-webkit-scrollbar-track { background: transparent; }
+  .materias-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+  .materia-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-bottom: 2px;
+    transition: background 0.15s;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .materia-item:hover { background: rgba(255,255,255,0.06); }
+  .materia-item.active { background: rgba(255,255,255,0.12); }
+
+  .materia-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .materia-name {
+    font-size: 13px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.75);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .materia-item.active .materia-name { color: white; font-weight: 500; }
+  .materia-docs {
+    margin-left: auto;
+    font-size: 10px;
+    color: rgba(255,255,255,0.3);
+    flex-shrink: 0;
+  }
+
+  .sidebar-footer {
+    padding: 12px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+  }
+  .drive-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.05);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .drive-status:hover { background: rgba(255,255,255,0.1); }
+  .drive-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .drive-dot.connected { background: #4ade80; box-shadow: 0 0 6px #4ade80; }
+  .drive-dot.disconnected { background: #f87171; }
+  .drive-label { font-size: 12px; color: rgba(255,255,255,0.6); }
+
+  /* MAIN */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--gris-fondo);
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    border-bottom: 1px solid var(--gris-borde);
+    background: white;
+    padding: 0 20px;
+    flex-shrink: 0;
+  }
+  .tab {
+    padding: 14px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--gris-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tab:hover { color: var(--verde); }
+  .tab.active { color: var(--verde); border-bottom-color: var(--verde); }
+  .tab svg { width: 15px; height: 15px; }
+
+  /* TAB PANELS */
+  .tab-panel { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+  .tab-panel.active { display: flex; }
+
+  /* CHAT PANEL */
+  .chat-context-bar {
+    padding: 8px 20px;
+    background: white;
+    border-bottom: 1px solid var(--gris-borde);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+  .context-label { font-size: 11px; color: var(--gris-muted); font-weight: 500; }
+  .context-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--verde-pale);
+    border: 1px solid rgba(8,80,65,0.15);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--verde);
+  }
+  .context-chip svg { width: 11px; height: 11px; }
+  .no-docs-chip {
+    font-size: 11px;
+    color: var(--gris-muted);
+    font-style: italic;
+  }
+
+  .messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .messages::-webkit-scrollbar { width: 6px; }
+  .messages::-webkit-scrollbar-track { background: transparent; }
+  .messages::-webkit-scrollbar-thumb { background: var(--gris-borde); border-radius: 3px; }
+
+  .msg {
+    display: flex;
+    gap: 10px;
+    max-width: 85%;
+    animation: fadeIn 0.2s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  .msg.user { align-self: flex-end; flex-direction: row-reverse; }
+  .msg.assistant { align-self: flex-start; }
+
+  .msg-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .msg.user .msg-avatar { background: var(--verde); color: white; }
+  .msg.assistant .msg-avatar { background: var(--verde-pale); color: var(--verde); font-family: 'DM Serif Display', serif; font-size: 14px; }
+
+  .msg-bubble {
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.65;
+    position: relative;
+  }
+  .msg.user .msg-bubble {
+    background: var(--verde);
+    color: white;
+    border-bottom-right-radius: 4px;
+  }
+  .msg.assistant .msg-bubble {
+    background: white;
+    color: var(--negro);
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    border: 1px solid var(--gris-borde);
+  }
+
+  .msg-bubble p { margin-bottom: 8px; }
+  .msg-bubble p:last-child { margin-bottom: 0; }
+  .msg-bubble strong { font-weight: 600; }
+  .msg-bubble ul, .msg-bubble ol { padding-left: 18px; margin: 6px 0; }
+  .msg-bubble li { margin-bottom: 4px; }
+
+  .msg-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    align-items: center;
+  }
+  .msg-action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 6px;
+    color: var(--gris-muted);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+  }
+  .msg-action-btn:hover { background: var(--gris-fondo); color: var(--verde); }
+  .msg-action-btn svg { width: 14px; height: 14px; }
+  .msg-time { font-size: 10px; color: var(--gris-muted); }
+
+  .typing-indicator {
+    display: flex;
+    gap: 4px;
+    padding: 14px 16px;
+    background: white;
+    border-radius: 16px;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    border: 1px solid var(--gris-borde);
+    width: fit-content;
+  }
+  .typing-dot {
+    width: 7px; height: 7px;
+    background: var(--gris-muted);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+
+  .welcome-msg {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--gris-muted);
+  }
+  .welcome-msg h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    color: var(--verde);
+    margin-bottom: 8px;
+  }
+  .welcome-msg p { font-size: 14px; line-height: 1.6; max-width: 380px; margin: 0 auto 20px; }
+  .quick-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 16px; }
+  .quick-btn {
+    background: white;
+    border: 1px solid var(--gris-borde);
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 13px;
+    color: var(--verde);
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+  .quick-btn:hover { background: var(--verde-pale); border-color: var(--verde); }
+
+  /* INPUT AREA */
+  .input-area {
+    padding: 12px 20px 16px;
+    background: white;
+    border-top: 1px solid var(--gris-borde);
+    flex-shrink: 0;
+  }
+
+  .tts-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding: 6px 12px;
+    background: var(--verde-pale);
+    border-radius: 8px;
+    font-size: 12px;
+    color: var(--verde);
+  }
+  .tts-controls.hidden { display: none; }
+  .tts-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--verde);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: background 0.15s;
+  }
+  .tts-btn:hover { background: rgba(8,80,65,0.1); }
+  .tts-btn svg { width: 13px; height: 13px; }
+
+  .input-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+  .input-wrapper {
+    flex: 1;
+    position: relative;
+  }
+  #chat-input {
+    width: 100%;
+    border: 1.5px solid var(--gris-borde);
+    border-radius: 14px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    resize: none;
+    outline: none;
+    line-height: 1.5;
+    max-height: 120px;
+    background: var(--gris-fondo);
+    color: var(--negro);
+    transition: border-color 0.15s;
+  }
+  #chat-input:focus { border-color: var(--verde); background: white; }
+  #chat-input::placeholder { color: var(--gris-muted); }
+
+  .mic-btn {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    background: var(--verde);
+    color: white;
+    box-shadow: 0 2px 8px rgba(8,80,65,0.3);
+  }
+  .mic-btn:hover { background: var(--verde-light); transform: scale(1.05); }
+  .mic-btn.recording {
+    background: #dc2626;
+    animation: pulse 1.2s infinite;
+    box-shadow: 0 0 0 0 rgba(220,38,38,0.4);
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(220,38,38,0.4); }
+    70% { box-shadow: 0 0 0 12px rgba(220,38,38,0); }
+    100% { box-shadow: 0 0 0 0 rgba(220,38,38,0); }
+  }
+  .mic-btn svg { width: 20px; height: 20px; }
+
+  .send-btn {
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--verde);
+    color: white;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    box-shadow: 0 2px 8px rgba(8,80,65,0.3);
+  }
+  .send-btn:hover { background: var(--verde-light); }
+  .send-btn:disabled { background: var(--gris-borde); box-shadow: none; cursor: not-allowed; }
+  .send-btn svg { width: 18px; height: 18px; }
+
+  .transcript-preview {
+    font-size: 12px;
+    color: var(--verde);
+    padding: 4px 4px 0;
+    font-style: italic;
+    min-height: 18px;
+  }
+
+  /* HISTORIAL PANEL */
+  .historial-panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+  .historial-panel::-webkit-scrollbar { width: 6px; }
+  .historial-panel::-webkit-scrollbar-thumb { background: var(--gris-borde); border-radius: 3px; }
+
+  .historial-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--gris-muted);
+  }
+  .historial-empty svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.3; }
+  .historial-empty p { font-size: 14px; }
+
+  .session-card {
+    background: white;
+    border: 1px solid var(--gris-borde);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .session-card:hover { border-color: var(--verde); box-shadow: 0 2px 8px rgba(8,80,65,0.1); }
+  .session-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+  .session-materia {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--verde-pale);
+    color: var(--verde);
+  }
+  .session-date { font-size: 11px; color: var(--gris-muted); }
+  .session-summary { font-size: 13px; color: var(--gris-texto); line-height: 1.5; }
+  .session-count { font-size: 11px; color: var(--gris-muted); margin-top: 6px; }
+
+  /* DRIVE PANEL */
+  .drive-panel {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+  .drive-connect-card {
+    background: white;
+    border: 1px solid var(--gris-borde);
+    border-radius: 16px;
+    padding: 28px;
+    text-align: center;
+    max-width: 420px;
+    margin: 0 auto;
+  }
+  .drive-connect-card svg { width: 48px; height: 48px; margin-bottom: 16px; color: var(--verde); }
+  .drive-connect-card h3 { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: 8px; color: var(--negro); }
+  .drive-connect-card p { font-size: 13px; color: var(--gris-muted); line-height: 1.6; margin-bottom: 20px; }
+  .btn-primary {
+    background: var(--verde);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s;
+    width: 100%;
+  }
+  .btn-primary:hover { background: var(--verde-light); }
+
+  .drive-folders {
+    display: none;
+  }
+  .drive-folder-card {
+    background: white;
+    border: 1px solid var(--gris-borde);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .drive-folder-card:hover { border-color: var(--verde); }
+  .drive-folder-card.active-folder { border-color: var(--verde); background: var(--verde-pale); }
+  .folder-icon { width: 36px; height: 36px; border-radius: 8px; background: var(--verde-pale); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .folder-icon svg { width: 18px; height: 18px; color: var(--verde); }
+  .folder-info { flex: 1; }
+  .folder-name { font-size: 14px; font-weight: 500; color: var(--negro); }
+  .folder-meta { font-size: 12px; color: var(--gris-muted); margin-top: 2px; }
+  .folder-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 10px;
+    background: var(--verde);
+    color: white;
+  }
+  .folder-badge.available { background: var(--gris-borde); color: var(--gris-texto); }
+
+  /* SETTINGS MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 20px;
+    padding: 28px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  }
+  .modal h3 { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: 20px; color: var(--negro); }
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--gris-texto); margin-bottom: 6px; letter-spacing: 0.3px; }
+  .form-input {
+    width: 100%;
+    border: 1.5px solid var(--gris-borde);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.15s;
+    color: var(--negro);
+  }
+  .form-input:focus { border-color: var(--verde); }
+  .modal-actions { display: flex; gap: 8px; margin-top: 20px; }
+  .btn-secondary {
+    flex: 1;
+    background: var(--gris-fondo);
+    color: var(--gris-texto);
+    border: 1px solid var(--gris-borde);
+    border-radius: 10px;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-secondary:hover { background: var(--gris-borde); }
+  .btn-primary-modal {
+    flex: 2;
+    background: var(--verde);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-primary-modal:hover { background: var(--verde-light); }
+
+  /* SIDEBAR TOGGLE */
+  .sidebar-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+    color: rgba(255,255,255,0.7);
+    display: flex;
+    align-items: center;
+    transition: background 0.15s;
+  }
+  .sidebar-toggle:hover { background: rgba(255,255,255,0.1); }
+  .sidebar-toggle svg { width: 20px; height: 20px; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--negro);
+    color: white;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: transform 0.3s ease;
+    z-index: 300;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* MOBILE */
+  @media (max-width: 640px) {
+    .sidebar { width: 0; position: fixed; height: 100%; z-index: 150; top: 56px; }
+    .sidebar.mobile-open { width: 220px; }
+    .msg { max-width: 92%; }
+    .header-model { display: none; }
+    .tabs { padding: 0 12px; overflow-x: auto; }
+    .tab { padding: 12px 14px; white-space: nowrap; }
+    .messages { padding: 14px; }
+    .input-area { padding: 10px 14px 14px; }
+  }
+
+  .voice-wave {
+    display: none;
+    align-items: center;
+    gap: 3px;
+    height: 20px;
+  }
+  .voice-wave.active { display: flex; }
+  .wave-bar {
+    width: 3px;
+    background: white;
+    border-radius: 2px;
+    animation: wave 0.8s infinite ease-in-out;
+  }
+  .wave-bar:nth-child(1) { height: 6px; animation-delay: 0s; }
+  .wave-bar:nth-child(2) { height: 12px; animation-delay: 0.1s; }
+  .wave-bar:nth-child(3) { height: 18px; animation-delay: 0.2s; }
+  .wave-bar:nth-child(4) { height: 12px; animation-delay: 0.3s; }
+  .wave-bar:nth-child(5) { height: 6px; animation-delay: 0.4s; }
+  @keyframes wave {
+    0%, 100% { transform: scaleY(0.5); }
+    50% { transform: scaleY(1); }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button class="sidebar-toggle" onclick="toggleSidebar()" aria-label="Toggle sidebar">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <div class="header-logo">Odonto<span>IA</span></div>
+  </div>
+  <div class="header-right">
+    <div class="cost-badge" onclick="openSettings()" title="Gasto del día">
+      💰 <span id="cost-display">$0.000</span> hoy
+    </div>
+    <div class="header-model" id="model-display">haiku-4-5</div>
+    <button class="sidebar-toggle" onclick="openSettings()" title="Configuración">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><circle cx="12" cy="12" r="3"/></svg>
+    </button>
+  </div>
+</header>
+
+<div class="app-body">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">Materias</div>
+    <div class="materias-list" id="materias-list">
+      <div style="padding:20px 12px;text-align:center;color:rgba(255,255,255,0.3);font-size:12px">
+        Conectá Drive para ver tus materias
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="drive-status" id="drive-status-btn" onclick="switchTab('drive')">
+        <div class="drive-dot disconnected" id="drive-dot"></div>
+        <span class="drive-label" id="drive-label">Google Drive</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- TABS -->
+    <nav class="tabs">
+      <div class="tab active" onclick="switchTab('chat')" id="tab-chat">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        Chat
+      </div>
+      <div class="tab" onclick="switchTab('historial')" id="tab-historial">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        Historial
+      </div>
+      <div class="tab" onclick="switchTab('drive')" id="tab-drive">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+        Drive
+      </div>
+    </nav>
+
+    <!-- CHAT PANEL -->
+    <div class="tab-panel active" id="panel-chat">
+      <div class="chat-context-bar" id="context-bar">
+        <span class="context-label">Contexto:</span>
+        <span class="no-docs-chip" id="context-chips">Sin documentos cargados</span>
+      </div>
+      <div class="messages" id="messages">
+        <div class="welcome-msg" id="welcome">
+          <h2>Hola, bienvenida 👋</h2>
+          <p>Tu asistente de estudio de estomatología. Seleccioná una materia del sidebar, conectá Drive con tus documentos, y preguntame lo que quieras — por voz o por texto.</p>
+          <div class="quick-actions">
+            <button class="quick-btn" onclick="sendQuick('¿Cuáles son los pasos del tratamiento de conducto?')">Tratamiento de conducto</button>
+            <button class="quick-btn" onclick="sendQuick('Explicame la clasificación de Black')">Clasificación de Black</button>
+            <button class="quick-btn" onclick="sendQuick('¿Cuáles son los signos de periodontitis?')">Signos de periodontitis</button>
+            <button class="quick-btn" onclick="sendQuick('Haceme un repaso rápido de la materia activa')">Repaso rápido</button>
+          </div>
+        </div>
+      </div>
+      <div class="input-area">
+        <div class="tts-controls hidden" id="tts-controls">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 6a7 7 0 010 12M9 9l-3 3H3v2h3l3 3V9z"/></svg>
+          <span style="flex:1;font-size:12px;color:var(--verde)">Leyendo respuesta...</span>
+          <button class="tts-btn" onclick="stopTTS()">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            Detener
+          </button>
+        </div>
+        <div class="transcript-preview" id="transcript-preview"></div>
+        <div class="input-row">
+          <button class="mic-btn" id="mic-btn" onclick="toggleMic()" title="Hablar (Chrome recomendado)">
+            <svg id="mic-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-7a3 3 0 01-3-3V5a3 3 0 016 0v6a3 3 0 01-3 3z"/></svg>
+            <div class="voice-wave" id="voice-wave">
+              <div class="wave-bar"></div><div class="wave-bar"></div>
+              <div class="wave-bar"></div><div class="wave-bar"></div>
+              <div class="wave-bar"></div>
+            </div>
+          </button>
+          <div class="input-wrapper">
+            <textarea id="chat-input" rows="1" placeholder="Escribí tu pregunta o usá el micrófono..." onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+          </div>
+          <button class="send-btn" id="send-btn" onclick="sendMessage()" title="Enviar">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORIAL PANEL -->
+    <div class="tab-panel" id="panel-historial">
+      <div class="historial-panel" id="historial-content">
+        <div class="historial-empty" id="historial-empty">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <p>Todavía no hay sesiones guardadas.<br>Las conversaciones se guardarán automáticamente.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- DRIVE PANEL -->
+    <div class="tab-panel" id="panel-drive">
+      <div class="drive-panel">
+        <div class="drive-connect-card" id="drive-connect-card">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+          <h3>Conectar Google Drive</h3>
+          <p>Conectá tu cuenta de Google para acceder a tus documentos de estudio. La app busca automáticamente la carpeta <strong>"Documentos IA"</strong> y carga las materias que encuentre.</p>
+          <button class="btn-primary" onclick="connectDrive()">
+            Conectar con Google Drive
+          </button>
+        </div>
+        <div class="drive-folders" id="drive-folders">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <div>
+              <div style="font-family:'DM Serif Display',serif;font-size:18px;color:var(--negro)">Documentos IA</div>
+              <div style="font-size:12px;color:var(--gris-muted);margin-top:2px" id="drive-user-email"></div>
+            </div>
+            <button class="btn-secondary" style="width:auto;padding:8px 14px;font-size:12px" onclick="refreshDrive()">↻ Actualizar</button>
+          </div>
+          <div id="folders-list"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <h3>⚙️ Configuración</h3>
+    <div class="form-group">
+      <label class="form-label">API Key de Anthropic</label>
+      <input type="password" class="form-input" id="api-key-input" placeholder="sk-ant-api03-...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Límite mensual (USD)</label>
+      <input type="number" class="form-input" id="monthly-limit-input" placeholder="15" value="15" min="1" max="100">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Modelo</label>
+      <select class="form-input" id="model-select">
+        <option value="claude-haiku-4-5-20251001">Claude Haiku (recomendado — más económico)</option>
+        <option value="claude-sonnet-4-6">Claude Sonnet (más inteligente — más caro)</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeSettings()">Cancelar</button>
+      <button class="btn-primary-modal" onclick="saveSettings()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- FIRST RUN OVERLAY -->
+<div id="first-run-overlay" style="display:none;position:fixed;inset:0;background:rgba(8,80,65,0.95);z-index:500;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:white;border-radius:20px;padding:32px;width:100%;max-width:420px;text-align:center;">
+    <div style="font-family:'DM Serif Display',serif;font-size:32px;color:#085041;margin-bottom:4px">OdontoIA</div>
+    <div style="font-size:13px;color:#8a9e98;margin-bottom:24px">Asistente de estudio de estomatología</div>
+    <div style="text-align:left;margin-bottom:16px">
+      <label style="display:block;font-size:12px;font-weight:600;color:#4a5a55;margin-bottom:6px">API Key de Anthropic</label>
+      <input type="password" id="first-run-key" placeholder="sk-ant-api03-..." style="width:100%;border:1.5px solid #e0e8e5;border-radius:10px;padding:12px 14px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;color:#0d1a16;">
+      <div id="first-run-error" style="color:#dc2626;font-size:12px;margin-top:6px;min-height:16px"></div>
+    </div>
+    <button onclick="saveFirstRunKey()" style="width:100%;background:#085041;color:white;border:none;border-radius:10px;padding:13px;font-size:15px;font-weight:500;font-family:'DM Sans',sans-serif;cursor:pointer;">Comenzar a estudiar →</button>
+    <p style="font-size:11px;color:#8a9e98;margin-top:14px;line-height:1.5">Tu API key se guarda solo en este navegador.<br>Obtenela en <strong>console.anthropic.com</strong></p>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────
+const GOOGLE_CLIENT_ID = '373140714047-mef3s8hu9t7kie8oon229qkggufuki6f.apps.googleusercontent.com';
+const GOOGLE_SCOPES = 'https://www.googleapis.com/auth/drive.readonly';
+const ROOT_FOLDER_NAME = 'Documentos IA';
+
+let state = {
+  apiKey: '',
+  model: 'claude-haiku-4-5-20251001',
+  monthlyLimit: 15,
+  dailyCost: 0,
+  totalTokens: 0,
+  driveConnected: false,
+  driveToken: null,
+  driveUserEmail: '',
+  activeMateriaId: null,
+  activeMateriaName: null,
+  materias: [],
+  activeDocuments: [],
+  messages: [],
+  sessions: [],
+  isRecording: false,
+  isSpeaking: false,
+  recognition: null,
+  utterance: null,
+};
+
+const MATERIA_COLORS = [
+  '#085041','#2563a8','#7c3aed','#b45309','#0e7490',
+  '#be185d','#065f46','#374151','#9d174d','#1e40af'
+];
+
+// ─────────────────────────────────────────────
+// STORAGE (Artifact persistent storage)
+// ─────────────────────────────────────────────
+async function saveToStorage(key, value) {
+  try {
+    await window.storage.set(key, JSON.stringify(value));
+  } catch(e) { console.log('Storage save error:', e); }
+}
+
+async function loadFromStorage(key) {
+  try {
+    const result = await window.storage.get(key);
+    return result ? JSON.parse(result.value) : null;
+  } catch(e) { return null; }
+}
+
+async function initStorage() {
+  const savedSettings = await loadFromStorage('odontoia-settings');
+  if (savedSettings) {
+    if (savedSettings.apiKey) state.apiKey = savedSettings.apiKey;
+    if (savedSettings.model) state.model = savedSettings.model;
+    if (savedSettings.monthlyLimit) state.monthlyLimit = savedSettings.monthlyLimit;
+    if (savedSettings.dailyCost) state.dailyCost = savedSettings.dailyCost;
+  }
+
+  const savedSessions = await loadFromStorage('odontoia-sessions');
+  if (savedSessions) {
+    state.sessions = savedSessions;
+    renderHistorial();
+  }
+
+  const savedMessages = await loadFromStorage('odontoia-messages');
+  if (savedMessages && savedMessages.length > 0) {
+    state.messages = savedMessages;
+    renderStoredMessages();
+  }
+
+  updateCostDisplay();
+  document.getElementById('api-key-input').value = state.apiKey || '';
+  document.getElementById('monthly-limit-input').value = state.monthlyLimit;
+  document.getElementById('model-select').value = state.model;
+  document.getElementById('model-display').textContent = state.model.includes('haiku') ? 'haiku-4-5' : 'sonnet-4-6';
+}
+
+function renderStoredMessages() {
+  const welcome = document.getElementById('welcome');
+  if (state.messages.length > 0 && welcome) welcome.style.display = 'none';
+  state.messages.forEach(msg => {
+    appendMessage(msg.role, msg.content, false);
+  });
+}
+
+// ─────────────────────────────────────────────
+// SETTINGS
+// ─────────────────────────────────────────────
+function openSettings() {
+  document.getElementById('settings-modal').classList.add('open');
+}
+function closeSettings() {
+  document.getElementById('settings-modal').classList.remove('open');
+}
+async function saveSettings() {
+  state.apiKey = document.getElementById('api-key-input').value.trim();
+  state.monthlyLimit = parseFloat(document.getElementById('monthly-limit-input').value) || 15;
+  state.model = document.getElementById('model-select').value;
+  document.getElementById('model-display').textContent = state.model.includes('haiku') ? 'haiku-4-5' : 'sonnet-4-6';
+  await saveToStorage('odontoia-settings', {
+    apiKey: state.apiKey,
+    model: state.model,
+    monthlyLimit: state.monthlyLimit,
+    dailyCost: state.dailyCost
+  });
+  closeSettings();
+  showToast('Configuración guardada ✓');
+}
+
+// ─────────────────────────────────────────────
+// TABS & SIDEBAR
+// ─────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+  if (window.innerWidth <= 640) closeMobileSidebar();
+}
+
+let sidebarOpen = true;
+function toggleSidebar() {
+  if (window.innerWidth <= 640) {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('mobile-open');
+  } else {
+    sidebarOpen = !sidebarOpen;
+    document.getElementById('sidebar').classList.toggle('collapsed', !sidebarOpen);
+  }
+}
+function closeMobileSidebar() {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+}
+
+// ─────────────────────────────────────────────
+// GOOGLE DRIVE
+// ─────────────────────────────────────────────
+function connectDrive() {
+  const params = new URLSearchParams({
+    client_id: GOOGLE_CLIENT_ID,
+    redirect_uri: window.location.href.split('?')[0],
+    response_type: 'token',
+    scope: GOOGLE_SCOPES,
+    prompt: 'consent'
+  });
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
+  const popup = window.open(authUrl, 'google-auth', 'width=500,height=600,left=200,top=100');
+
+  const checkPopup = setInterval(() => {
+    try {
+      if (popup.closed) { clearInterval(checkPopup); return; }
+      const url = popup.location.href;
+      if (url.includes('access_token')) {
+        const hash = popup.location.hash;
+        popup.close();
+        clearInterval(checkPopup);
+        const params = new URLSearchParams(hash.substring(1));
+        const token = params.get('access_token');
+        if (token) onDriveConnected(token);
+      }
+    } catch(e) {}
+  }, 500);
+}
+
+async function onDriveConnected(token) {
+  state.driveToken = token;
+  state.driveConnected = true;
+
+  // Get user info
+  try {
+    const resp = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const info = await resp.json();
+    state.driveUserEmail = info.email || '';
+    document.getElementById('drive-user-email').textContent = info.email || '';
+  } catch(e) {}
+
+  document.getElementById('drive-dot').className = 'drive-dot connected';
+  document.getElementById('drive-label').textContent = 'Drive conectado';
+  showToast('¡Drive conectado! Cargando materias...');
+  await loadDriveFolders();
+}
+
+async function loadDriveFolders() {
+  if (!state.driveToken) return;
+
+  try {
+    // Find root folder "Documentos IA"
+    const searchResp = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q=name='${ROOT_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false&fields=files(id,name)`,
+      { headers: { Authorization: `Bearer ${state.driveToken}` } }
+    );
+    const searchData = await searchResp.json();
+    if (!searchData.files || searchData.files.length === 0) {
+      showToast(`No se encontró la carpeta "${ROOT_FOLDER_NAME}" en Drive`);
+      return;
+    }
+    const rootFolder = searchData.files[0];
+
+    // Get subfolders (materias)
+    const subfoldersResp = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q='${rootFolder.id}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false&fields=files(id,name)&orderBy=name`,
+      { headers: { Authorization: `Bearer ${state.driveToken}` } }
+    );
+    const subfoldersData = await subfoldersResp.json();
+    const subfolders = subfoldersData.files || [];
+
+    // Build materias
+    state.materias = subfolders.map((folder, i) => ({
+      id: folder.id,
+      name: folder.name,
+      color: MATERIA_COLORS[i % MATERIA_COLORS.length],
+      docCount: 0
+    }));
+
+    // Count docs per materia
+    for (let materia of state.materias) {
+      const docsResp = await fetch(
+        `https://www.googleapis.com/drive/v3/files?q='${materia.id}' in parents and trashed=false&fields=files(id)`,
+        { headers: { Authorization: `Bearer ${state.driveToken}` } }
+      );
+      const docsData = await docsResp.json();
+      materia.docCount = (docsData.files || []).length;
+    }
+
+    renderMaterias();
+    renderDriveFolders();
+    document.getElementById('drive-connect-card').style.display = 'none';
+    document.getElementById('drive-folders').style.display = 'block';
+    showToast(`${state.materias.length} materia(s) encontrada(s) ✓`);
+  } catch(e) {
+    showToast('Error al cargar Drive. Intentá de nuevo.');
+    console.error(e);
+  }
+}
+
+function renderMaterias() {
+  const list = document.getElementById('materias-list');
+  if (state.materias.length === 0) {
+    list.innerHTML = '<div style="padding:20px 12px;text-align:center;color:rgba(255,255,255,0.3);font-size:12px">Sin carpetas en "Documentos IA"</div>';
+    return;
+  }
+  list.innerHTML = state.materias.map(m => `
+    <div class="materia-item ${state.activeMateriaId === m.id ? 'active' : ''}"
+         onclick="selectMateria('${m.id}','${m.name.replace(/'/g,"\\'")}','${m.color}')">
+      <div class="materia-dot" style="background:${m.color}"></div>
+      <span class="materia-name">${m.name}</span>
+      <span class="materia-docs">${m.docCount}</span>
+    </div>
+  `).join('');
+}
+
+function renderDriveFolders() {
+  const list = document.getElementById('folders-list');
+  list.innerHTML = state.materias.map(m => `
+    <div class="drive-folder-card ${state.activeMateriaId === m.id ? 'active-folder' : ''}"
+         onclick="selectMateria('${m.id}','${m.name.replace(/'/g,"\\'")}','${m.color}')">
+      <div class="folder-icon" style="background:${m.color}22">
+        <svg fill="none" stroke="${m.color}" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+      </div>
+      <div class="folder-info">
+        <div class="folder-name">${m.name}</div>
+        <div class="folder-meta">${m.docCount} documento(s)</div>
+      </div>
+      <div class="folder-badge ${state.activeMateriaId === m.id ? '' : 'available'}">
+        ${state.activeMateriaId === m.id ? 'Activo' : 'Disponible'}
+      </div>
+    </div>
+  `).join('');
+}
+
+async function refreshDrive() {
+  showToast('Actualizando...');
+  await loadDriveFolders();
+}
+
+async function selectMateria(id, name, color) {
+  if (state.activeMateriaId === id) return;
+
+  // Save current session if has messages
+  if (state.messages.length > 0) {
+    await saveCurrentSession();
+  }
+
+  state.activeMateriaId = id;
+  state.activeMateriaName = name;
+  state.activeDocuments = [];
+  state.messages = [];
+
+  renderMaterias();
+  renderDriveFolders();
+  clearMessages();
+  updateContextBar();
+  switchTab('chat');
+
+  showToast(`Cargando ${name}...`);
+  await loadMateriaDocuments(id, name, color);
+}
+
+async function loadMateriaDocuments(folderId, folderName, color) {
+  if (!state.driveToken) return;
+
+  try {
+    const resp = await fetch(
+      `https://www.googleapis.com/drive/v3/files?q='${folderId}' in parents and trashed=false&fields=files(id,name,mimeType,size)&orderBy=name`,
+      { headers: { Authorization: `Bearer ${state.driveToken}` } }
+    );
+    const data = await resp.json();
+    const files = data.files || [];
+
+    if (files.length === 0) {
+      showToast(`Sin documentos en ${folderName}`);
+      updateContextBar();
+      return;
+    }
+
+    state.activeDocuments = [];
+    let loaded = 0;
+
+    for (const file of files) {
+      try {
+        let text = '';
+        if (file.mimeType === 'application/vnd.google-apps.document') {
+          const exportResp = await fetch(
+            `https://www.googleapis.com/drive/v3/files/${file.id}/export?mimeType=text/plain`,
+            { headers: { Authorization: `Bearer ${state.driveToken}` } }
+          );
+          text = await exportResp.text();
+        } else if (file.mimeType === 'text/plain') {
+          const dlResp = await fetch(
+            `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`,
+            { headers: { Authorization: `Bearer ${state.driveToken}` } }
+          );
+          text = await dlResp.text();
+        } else if (file.mimeType === 'application/pdf') {
+          text = `[PDF: ${file.name} — disponible en Drive]`;
+        } else {
+          text = `[Archivo: ${file.name}]`;
+        }
+
+        if (text.length > 8000) text = text.substring(0, 8000) + '...[truncado]';
+
+        state.activeDocuments.push({ name: file.name, content: text });
+        loaded++;
+      } catch(e) {
+        console.warn('Error reading file:', file.name, e);
+      }
+    }
+
+    updateContextBar();
+    showToast(`${loaded} documento(s) cargado(s) de ${folderName} ✓`);
+  } catch(e) {
+    console.error(e);
+    showToast('Error al cargar documentos');
+  }
+}
+
+function updateContextBar() {
+  const chips = document.getElementById('context-chips');
+  if (state.activeDocuments.length === 0) {
+    chips.innerHTML = state.activeMateriaName
+      ? `<span class="no-docs-chip">${state.activeMateriaName} — sin documentos</span>`
+      : '<span class="no-docs-chip">Sin documentos cargados</span>';
+    return;
+  }
+  chips.innerHTML = state.activeDocuments.map(doc =>
+    `<span class="context-chip">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+      ${doc.name}
+    </span>`
+  ).join('');
+}
+
+// ─────────────────────────────────────────────
+// VOICE — Speech Recognition
+// ─────────────────────────────────────────────
+function toggleMic() {
+  if (state.isRecording) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+}
+
+function startRecording() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    showToast('El reconocimiento de voz requiere Chrome');
+    return;
+  }
+
+  stopTTS();
+
+  state.recognition = new SpeechRecognition();
+  state.recognition.lang = 'es-ES';
+  state.recognition.continuous = false;
+  state.recognition.interimResults = true;
+
+  state.recognition.onstart = () => {
+    state.isRecording = true;
+    document.getElementById('mic-btn').classList.add('recording');
+    document.getElementById('mic-icon').style.display = 'none';
+    document.getElementById('voice-wave').classList.add('active');
+    document.getElementById('transcript-preview').textContent = '🎙️ Escuchando...';
+  };
+
+  state.recognition.onresult = (e) => {
+    let interim = '';
+    let final = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) final += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
+    }
+    document.getElementById('transcript-preview').textContent = final || interim;
+    if (final) document.getElementById('chat-input').value = final;
+  };
+
+  state.recognition.onend = () => {
+    state.isRecording = false;
+    document.getElementById('mic-btn').classList.remove('recording');
+    document.getElementById('mic-icon').style.display = '';
+    document.getElementById('voice-wave').classList.remove('active');
+    const text = document.getElementById('chat-input').value.trim();
+    if (text) {
+      document.getElementById('transcript-preview').textContent = '';
+      sendMessage();
+    } else {
+      document.getElementById('transcript-preview').textContent = '';
+    }
+  };
+
+  state.recognition.onerror = (e) => {
+    state.isRecording = false;
+    document.getElementById('mic-btn').classList.remove('recording');
+    document.getElementById('mic-icon').style.display = '';
+    document.getElementById('voice-wave').classList.remove('active');
+    if (e.error !== 'no-speech') showToast('Error de micrófono: ' + e.error);
+    document.getElementById('transcript-preview').textContent = '';
+  };
+
+  state.recognition.start();
+}
+
+function stopRecording() {
+  if (state.recognition) state.recognition.stop();
+}
+
+// ─────────────────────────────────────────────
+// VOICE — Text to Speech
+// ─────────────────────────────────────────────
+function speakText(text) {
+  if (!window.speechSynthesis) return;
+  stopTTS();
+
+  // Clean text for speech
+  const clean = text.replace(/[#*_`]/g, '').replace(/\n+/g, ' ').trim();
+  if (!clean) return;
+
+  state.utterance = new SpeechSynthesisUtterance(clean);
+  state.utterance.lang = 'es-ES';
+  state.utterance.rate = 0.95;
+  state.utterance.pitch = 1;
+
+  // Try to pick a Spanish voice
+  const voices = window.speechSynthesis.getVoices();
+  const esVoice = voices.find(v => v.lang.startsWith('es')) || null;
+  if (esVoice) state.utterance.voice = esVoice;
+
+  state.utterance.onstart = () => {
+    state.isSpeaking = true;
+    document.getElementById('tts-controls').classList.remove('hidden');
+  };
+  state.utterance.onend = () => {
+    state.isSpeaking = false;
+    document.getElementById('tts-controls').classList.add('hidden');
+  };
+  state.utterance.onerror = () => {
+    state.isSpeaking = false;
+    document.getElementById('tts-controls').classList.add('hidden');
+  };
+
+  window.speechSynthesis.speak(state.utterance);
+}
+
+function stopTTS() {
+  if (window.speechSynthesis) window.speechSynthesis.cancel();
+  state.isSpeaking = false;
+  document.getElementById('tts-controls').classList.add('hidden');
+}
+
+// ─────────────────────────────────────────────
+// CHAT
+// ─────────────────────────────────────────────
+function buildSystemPrompt() {
+  let prompt = `Eres OdontoIA, asistente especializado en estomatología y odontología para una estudiante universitaria avanzada de la carrera. Tu rol es ayudarla a estudiar, repasar y resolver dudas clínicas y teóricas.
+
+REGLAS:
+- Respondé con precisión clínica usando terminología odontológica correcta
+- Adaptá la profundidad al nivel universitario avanzado
+- Sé conciso: máximo 3-4 párrafos por respuesta (para que la lectura en voz alta sea cómoda)
+- Al final de cada respuesta, sugerí 1-2 temas relacionados para continuar el repaso
+- Si no sabés algo o no está en los documentos, decilo claramente
+- Respondé siempre en español`;
+
+  if (state.activeMateriaName) {
+    prompt += `\n\nMATERIA ACTIVA: ${state.activeMateriaName}`;
+  }
+
+  if (state.activeDocuments.length > 0) {
+    prompt += `\n\nDOCUMENTOS DE ESTUDIO CARGADOS (priorizá esta información y citala cuando sea relevante):\n`;
+    state.activeDocuments.forEach(doc => {
+      prompt += `\n--- ${doc.name} ---\n${doc.content}\n`;
+    });
+  }
+
+  return prompt;
+}
+
+async function sendMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text || !state.apiKey) {
+    if (!state.apiKey) {
+      showToast('Configurá tu API Key primero');
+      openSettings();
+    }
+    return;
+  }
+
+  input.value = '';
+  autoResize(input);
+  stopTTS();
+
+  // Hide welcome
+  const welcome = document.getElementById('welcome');
+  if (welcome) welcome.style.display = 'none';
+
+  // Add user message
+  appendMessage('user', text);
+  state.messages.push({ role: 'user', content: text });
+
+  // Show typing
+  const typingId = showTyping();
+
+  try {
+    const messages = state.messages.slice(-20).map(m => ({
+      role: m.role,
+      content: m.content
+    }));
+
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': state.apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: state.model,
+        max_tokens: 1024,
+        system: buildSystemPrompt(),
+        messages: messages
+      })
+    });
+
+    removeTyping(typingId);
+
+    if (!resp.ok) {
+      const err = await resp.json();
+      throw new Error(err.error?.message || 'Error de API');
+    }
+
+    const data = await resp.json();
+    const reply = data.content[0].text;
+
+    appendMessage('assistant', reply);
+    state.messages.push({ role: 'assistant', content: reply });
+
+    // Update cost
+    const inputTokens = data.usage?.input_tokens || 0;
+    const outputTokens = data.usage?.output_tokens || 0;
+    updateCost(inputTokens, outputTokens);
+
+    // Speak response
+    speakText(reply);
+
+    // Save state
+    await saveToStorage('odontoia-messages', state.messages.slice(-50));
+
+  } catch(e) {
+    removeTyping(typingId);
+    appendMessage('assistant', `Error: ${e.message}. Verificá tu API key en ⚙️ Configuración.`);
+    showToast('Error al conectar con Claude');
+    console.error(e);
+  }
+}
+
+function sendQuick(text) {
+  document.getElementById('chat-input').value = text;
+  sendMessage();
+}
+
+function appendMessage(role, content, save = true) {
+  const messages = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+
+  const avatar = role === 'assistant'
+    ? '<div class="msg-avatar">O</div>'
+    : '<div class="msg-avatar">E</div>';
+
+  const time = new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' });
+  const formattedContent = formatContent(content);
+
+  let actions = '';
+  if (role === 'assistant') {
+    actions = `<div class="msg-actions">
+      <button class="msg-action-btn" onclick="speakText(this.closest('.msg').querySelector('.msg-bubble').innerText)" title="Leer en voz alta">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M12 6a7 7 0 010 12M9 9l-3 3H3v2h3l3 3V9z"/></svg>
+      </button>
+      <span class="msg-time">${time}</span>
+    </div>`;
+  }
+
+  div.innerHTML = `${avatar}<div><div class="msg-bubble">${formattedContent}</div>${actions}</div>`;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+  return div;
+}
+
+function formatContent(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+    .replace(/^/, '<p>').replace(/$/, '</p>');
+}
+
+let typingCounter = 0;
+function showTyping() {
+  const id = 'typing-' + (++typingCounter);
+  const messages = document.getElementById('messages');
+  const div = document.createElement('div');
+  div.className = 'msg assistant';
+  div.id = id;
+  div.innerHTML = `<div class="msg-avatar">O</div><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>`;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+  return id;
+}
+
+function removeTyping(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+function clearMessages() {
+  const messages = document.getElementById('messages');
+  messages.innerHTML = '<div class="welcome-msg" id="welcome"><h2>Hola, bienvenida 👋</h2><p>Materia cambiada. Preguntame lo que quieras sobre <strong>' + (state.activeMateriaName || 'esta materia') + '</strong>.</p></div>';
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+// ─────────────────────────────────────────────
+// COST
+// ─────────────────────────────────────────────
+function updateCost(inputTokens, outputTokens) {
+  // Haiku pricing: $0.80/M input, $4/M output
+  // Sonnet pricing: $3/M input, $15/M output
+  let costPerMInput = 0.80;
+  let costPerMOutput = 4.0;
+  if (state.model.includes('sonnet')) {
+    costPerMInput = 3.0;
+    costPerMOutput = 15.0;
+  }
+  const cost = (inputTokens / 1_000_000) * costPerMInput + (outputTokens / 1_000_000) * costPerMOutput;
+  state.dailyCost += cost;
+  updateCostDisplay();
+  saveToStorage('odontoia-settings', {
+    apiKey: state.apiKey, model: state.model,
+    monthlyLimit: state.monthlyLimit, dailyCost: state.dailyCost
+  });
+}
+
+function updateCostDisplay() {
+  document.getElementById('cost-display').textContent = '$' + state.dailyCost.toFixed(4);
+}
+
+// ─────────────────────────────────────────────
+// HISTORIAL
+// ─────────────────────────────────────────────
+async function saveCurrentSession() {
+  if (state.messages.length < 2) return;
+  const userMessages = state.messages.filter(m => m.role === 'user');
+  const summary = userMessages[0]?.content?.substring(0, 80) || 'Sesión de estudio';
+  const session = {
+    id: Date.now(),
+    date: new Date().toLocaleDateString('es', { day: '2-digit', month: 'short', year: 'numeric' }),
+    materia: state.activeMateriaName || 'General',
+    summary: summary,
+    messageCount: state.messages.length,
+    messages: state.messages.slice()
+  };
+  state.sessions.unshift(session);
+  if (state.sessions.length > 30) state.sessions = state.sessions.slice(0, 30);
+  await saveToStorage('odontoia-sessions', state.sessions);
+  renderHistorial();
+}
+
+function renderHistorial() {
+  const content = document.getElementById('historial-content');
+  const empty = document.getElementById('historial-empty');
+  if (state.sessions.length === 0) {
+    if (empty) empty.style.display = 'block';
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  content.innerHTML = state.sessions.map(s => `
+    <div class="session-card" onclick="loadSession(${s.id})">
+      <div class="session-header">
+        <span class="session-materia">${s.materia}</span>
+        <span class="session-date">${s.date}</span>
+      </div>
+      <div class="session-summary">${s.summary}${s.summary.length >= 80 ? '...' : ''}</div>
+      <div class="session-count">${s.messageCount} mensajes</div>
+    </div>
+  `).join('');
+}
+
+async function loadSession(id) {
+  const session = state.sessions.find(s => s.id === id);
+  if (!session) return;
+  state.messages = session.messages;
+  state.activeMateriaName = session.materia;
+  clearMessages();
+  const welcome = document.getElementById('welcome');
+  if (welcome) welcome.remove();
+  session.messages.forEach(msg => appendMessage(msg.role, msg.content, false));
+  switchTab('chat');
+  showToast('Sesión retomada ✓');
+}
+
+// ─────────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────────
+let toastTimeout;
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+function checkFirstRun() {
+  if (!state.apiKey) {
+    document.getElementById('first-run-overlay').style.display = 'flex';
+  }
+}
+
+function saveFirstRunKey() {
+  const key = document.getElementById('first-run-key').value.trim();
+  if (!key || !key.startsWith('sk-')) {
+    document.getElementById('first-run-error').textContent = 'Ingresá una API key válida (empieza con sk-)';
+    return;
+  }
+  state.apiKey = key;
+  document.getElementById('api-key-input').value = key;
+  saveToStorage('odontoia-settings', {
+    apiKey: state.apiKey, model: state.model,
+    monthlyLimit: state.monthlyLimit, dailyCost: state.dailyCost
+  });
+  document.getElementById('first-run-overlay').style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await initStorage();
+  checkFirstRun();
+
+  // Load voices
+  if (window.speechSynthesis) {
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+  }
+
+  // Close modal on overlay click
+  document.getElementById('settings-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeSettings();
+  });
+
+  // Mobile sidebar close on outside tap
+  document.addEventListener('click', (e) => {
+    if (window.innerWidth <= 640) {
+      const sidebar = document.getElementById('sidebar');
+      if (sidebar.classList.contains('mobile-open') &&
+          !sidebar.contains(e.target) &&
+          !e.target.closest('.sidebar-toggle')) {
+        closeMobileSidebar();
+      }
+    }
+  });
+});
+</script>
+</body>
+</html>

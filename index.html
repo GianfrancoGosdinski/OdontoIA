@@ -1043,12 +1043,11 @@ async function saveSettings() {
   state.monthlyLimit = parseFloat(document.getElementById('monthly-limit-input').value) || 15;
   state.model = document.getElementById('model-select').value;
   document.getElementById('model-display').textContent = state.model.includes('haiku') ? 'haiku-4-5' : 'sonnet-4-6';
-  await saveToStorage('odontoia-settings', {
-    apiKey: state.apiKey,
-    model: state.model,
-    monthlyLimit: state.monthlyLimit,
-    dailyCost: state.dailyCost
-  });
+  const data = {
+    apiKey: state.apiKey, model: state.model,
+    monthlyLimit: state.monthlyLimit, dailyCost: state.dailyCost
+  };
+  localStorage.setItem('odontoia-settings', JSON.stringify(data));
   closeSettings();
   showToast('Configuración guardada ✓');
 }
@@ -1535,7 +1534,7 @@ async function sendMessage() {
     speakText(reply);
 
     // Save state
-    await saveToStorage('odontoia-messages', state.messages.slice(-50));
+    localStorage.setItem('odontoia-messages', JSON.stringify(state.messages.slice(-50)));
 
   } catch(e) {
     removeTyping(typingId);
@@ -1626,8 +1625,6 @@ function autoResize(el) {
 // COST
 // ─────────────────────────────────────────────
 function updateCost(inputTokens, outputTokens) {
-  // Haiku pricing: $0.80/M input, $4/M output
-  // Sonnet pricing: $3/M input, $15/M output
   let costPerMInput = 0.80;
   let costPerMOutput = 4.0;
   if (state.model.includes('sonnet')) {
@@ -1637,10 +1634,11 @@ function updateCost(inputTokens, outputTokens) {
   const cost = (inputTokens / 1_000_000) * costPerMInput + (outputTokens / 1_000_000) * costPerMOutput;
   state.dailyCost += cost;
   updateCostDisplay();
-  saveToStorage('odontoia-settings', {
+  const data = {
     apiKey: state.apiKey, model: state.model,
     monthlyLimit: state.monthlyLimit, dailyCost: state.dailyCost
-  });
+  };
+  localStorage.setItem('odontoia-settings', JSON.stringify(data));
 }
 
 function updateCostDisplay() {
@@ -1664,7 +1662,7 @@ async function saveCurrentSession() {
   };
   state.sessions.unshift(session);
   if (state.sessions.length > 30) state.sessions = state.sessions.slice(0, 30);
-  await saveToStorage('odontoia-sessions', state.sessions);
+  localStorage.setItem('odontoia-sessions', JSON.stringify(state.sessions));
   renderHistorial();
 }
 
@@ -1722,7 +1720,7 @@ function checkFirstRun() {
   }
 }
 
-function saveFirstRunKey() {
+async function saveFirstRunKey() {
   const key = document.getElementById('first-run-key').value.trim();
   if (!key || !key.startsWith('sk-')) {
     document.getElementById('first-run-error').textContent = 'Ingresá una API key válida (empieza con sk-)';
@@ -1730,11 +1728,13 @@ function saveFirstRunKey() {
   }
   state.apiKey = key;
   document.getElementById('api-key-input').value = key;
-  saveToStorage('odontoia-settings', {
+  const data = {
     apiKey: state.apiKey, model: state.model,
     monthlyLimit: state.monthlyLimit, dailyCost: state.dailyCost
-  });
+  };
+  localStorage.setItem('odontoia-settings', JSON.stringify(data));
   document.getElementById('first-run-overlay').style.display = 'none';
+  showToast('API Key guardada ✓');
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
